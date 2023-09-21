@@ -7,11 +7,18 @@ int main(){
     // 0 for reading; 1 for writing
     int arr[2];
 
-    // create the pipe
-    if(pipe(arr) == -1) exit(1);
+    // create the pipe and check the exception
+    if(pipe(arr) == -1){
+        perror("pipe");
+        exit(EXIT_FAILURE);
+    }
     
-    // create the child process
+    // create the child process and check the exception
     pid_t child_pid = fork();
+    if(child_pid == -1){
+        perror("fork");
+        exit(EXIT_FAILURE);
+    }
 
     // the child process
     if(child_pid == 0){
