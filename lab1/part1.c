@@ -4,40 +4,36 @@
 # include <sys/types.h>
 
 int main(){
-    int arr[2]; // 0 for reading; 1 for writing
+    // 0 for reading; 1 for writing
+    int arr[2];
 
     // create the pipe
     if(pipe(arr) == -1){
         perror("pipe");
 	exit(EXIT_FAILURE);
     }
-
-    pid_t child_pid = fork();  // create the child process
     
-    // check the return of the fork()
-    if(child_pid == -1){
-        perror("fork");
-	exit(EXIT_FAILURE);
-    }
+    // create the child process
+    pid_t child_pid = fork();
 
     // the child process
     if(child_pid == 0){
-        close(arr[0]); // close the read end of the pipe
+        close(arr[0]);
 	dup2(arr[1], STDOUT_FILENO);
-	close(arr[1]); // close the write end of the pipe
-	execlp("ls", "ls", "/", NULL); // execute the "ls /" command
-	perror("execlp");
-	exit(EXIT_FAILURE);
+	close(arr[1]);
+	
+	// execute the "ls /" command
+	execlp("ls", "ls", "/", NULL);
     }
 
     // the parent process
     else{
-        close(arr[1]); //close the write end of the pipe
+        close(arr[1]);
 	dup2(arr[0], STDIN_FILENO);
-	close(arr[0]); // close the read end of the pipe
+	close(arr[0]);
+	
+	// execute the "wc -l" command
 	execlp("wc", "wc", "-l", NULL);
-	perror("execlp");
-        exit(EXIT_FAILURE);
     }
 
     return 0;
