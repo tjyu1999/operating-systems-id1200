@@ -8,10 +8,7 @@ int main(){
     int arr[2];
 
     // create the pipe
-    if(pipe(arr) == -1){
-        perror("pipe");
-	exit(EXIT_FAILURE);
-    }
+    if(pipe(arr) == -1) exit(1);
     
     // create the child process
     pid_t child_pid = fork();
