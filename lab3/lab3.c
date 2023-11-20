@@ -1,12 +1,12 @@
-# include <stdio.h>
-# include <stdlib.h>
-# include <string.h>
-# include <stdbool.h>
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+#include<stdbool.h>
 
-# define PAGE_TABLE_SIZE 256
-# define TLB_SIZE        16
-# define BUFFER_SIZE     256
-# define MEM_SIZE        256
+#define PAGE_TABLE_SIZE 256
+#define TLB_SIZE        16
+#define BUFFER_SIZE     256
+#define MEM_SIZE        256
 
 struct TLB{
     unsigned char tlb_page[TLB_SIZE];
