@@ -3,25 +3,25 @@
 # include <unistd.h>
 # include <pthread.h>
 
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+# define NUM_THREAD  3
+# define MAX_BUFFER 15
 
-int num_thread = 3;
 int buffer = 0;
-int max_buffer = 15;
+pthread_mutex_t mutex_lock = PTHREAD_MUTEX_INITIALIZER;
 
-void* thread_function(void* thread_id){
-    int count = 0;
+void* thread_function(){
+    int cnt = 0;
+    pid_t pid = getpid();
+    pthread_t tid = pthread_self(); 
     
-    while(1){    
-        int mutex_lock = pthread_mutex_lock(&mutex);
-        if(mutex_lock){
+    while(1){
+        if(pthread_mutex_lock(&mutex_lock)){
             perror("pthread_mutex_lock");
             pthread_exit(NULL);
         }
         
-        if(buffer == max_buffer){
-            int mutex_unlock = pthread_mutex_unlock(&mutex);
-            if(mutex_unlock){
+        if(buffer == MAX_BUFFER){
+            if(pthread_mutex_unlock(&mutex_lock)){
                 perror("pthread_mutex_unlock");
                 pthread_exit(NULL);
             }
@@ -29,47 +29,34 @@ void* thread_function(void* thread_id){
             break;
         }
         
-        printf("TID: %u, PID: %d, Buffer: %d\n", *((int*) thread_id), getpid(), buffer);    
-        buffer++;
-        count++;
+        printf("TID: %u, PID: %d, Buffer: %d\n", *((int*) tid), pid, ++buffer);
+        cnt++;
         
-        int mutex_unlock = pthread_mutex_unlock(&mutex);
-        if(mutex_unlock){
+        if(pthread_mutex_unlock(&mutex_lock)){
             perror("pthread_mutex_unlock");
             pthread_exit(NULL);
         }
         
-        usleep(rand() % 1000);
+        usleep(rand() % 100);
     }
     
-    pthread_exit((void*)(intptr_t) count);
+    printf("TID %u worked on the buffer %d times\n", *((int*) tid), cnt);
+    pthread_exit(NULL);
 }
 
 int main(){
-    int access_time = 0;
-    pthread_t thread_id[num_thread];
-    pthread_mutex_init(&mutex, NULL);
+    pthread_t threads[NUM_THREAD];
     
-    for(int i = 0; i < num_thread; i++){
-        int result = pthread_create(&thread_id[i], NULL, thread_function, &thread_id[i]);
-        if(result){
+    for(int i = 0; i < NUM_THREAD; i++){
+        if(pthread_create(&threads[i], NULL, thread_function, NULL)){
             perror("pthread_create");
             exit(EXIT_FAILURE);
         }
     }
     
-    for(int j = 0; j < num_thread; j++){
-        void* thread_result;
-        int thread_count;
-        
-        pthread_join(thread_id[j], &thread_result);
-        thread_count = (intptr_t) thread_result;
-        access_time += thread_count;
-        
-        printf("TID %u worked on the buffer %d times\n", *((int*) thread_id[j]), thread_count);
-    }    
-    printf("Total buffer accesses: %d\n", access_time);
+    for(int j = 0; j < NUM_THREAD; j++) pthread_join(threads[j], NULL);
+    printf("Total buffer accesses: %d\n", buffer);
+    pthread_mutex_destroy(&mutex_lock);
     
-    pthread_mutex_destroy(&mutex);
     return 0;
 }
