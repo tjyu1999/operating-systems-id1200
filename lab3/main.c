@@ -1,12 +1,12 @@
-#include<stdio.h>
-#include<stdlib.h>
-#include<string.h>
-#include<stdbool.h>
+# include <stdio.h>
+# include <stdlib.h>
+# include <string.h>
+# include <stdbool.h>
 
-#define PAGE_TABLE_SIZE 256
-#define TLB_SIZE        16
-#define BUFFER_SIZE     256
-#define MEM_SIZE        256
+# define PAGE_TABLE_SIZE 256
+# define TLB_SIZE         16
+# define BUFFER_SIZE     256
+# define MEM_SIZE        256
 
 struct TLB{
     unsigned char tlb_page[TLB_SIZE];
@@ -14,7 +14,7 @@ struct TLB{
     int idx;
 };
 
-int read_from_disk(int page_num, char *memory, int* open_frame){
+int read_from_disk(int page_num, char* memory, int* open_frame){
     FILE *back_file = fopen("BACKING_STORE.bin", "rb");
     if(back_file == NULL){
         perror("fopen");
@@ -40,7 +40,7 @@ int read_from_disk(int page_num, char *memory, int* open_frame){
     return (*open_frame) - 1;
 }
 
-int find_page(int logi_addr, char* page_table, struct TLB *tlb,  char* memory, int* open_frame, int* page_fault, int* tlb_hit_sum, int real_phys_addr, int real_val){
+int find_page(int logi_addr, char* page_table, struct TLB* tlb,  char* memory, int* open_frame, int* page_fault, int* tlb_hit_sum){
     unsigned char page_num;
     unsigned char offset;
     unsigned char mask = 0xFF;    
@@ -77,22 +77,17 @@ int find_page(int logi_addr, char* page_table, struct TLB *tlb,  char* memory, i
     
     int phys_addr = ((unsigned char)frame * MEM_SIZE) + offset;
     val = *(memory + phys_addr);
-    printf("Physical address: %d\t Value: %d\t", phys_addr, val);
-    if((phys_addr != real_phys_addr) || (val != real_val)) printf("INCORRECT!!!");
-    printf("\n");
+    printf("Physical address: %d\t Value: %d\t\n", phys_addr, val);
 
     return 0;
 }
 
 int main(int argc, char** argv){
-    if(argc < 2){
-        printf("args");
-        exit(EXIT_FAILURE);
-    }
+    if(argc < 2) exit(EXIT_FAILURE);
 
     int logi_addr;
-    int real_phys_addr;
-    int real_val;
+    int phys_addr;
+    int val;
     int open_frame = 0;
     int page_fault = 0;
     int tlb_hit_sum = 0;
@@ -101,14 +96,8 @@ int main(int argc, char** argv){
     unsigned char page_table[PAGE_TABLE_SIZE];
     char memory[MEM_SIZE][MEM_SIZE];
     
-    FILE *addr_file = fopen(argv[1], "r");
+    FILE* addr_file = fopen(argv[1], "r");
     if(addr_file == NULL){
-        perror("fopen");
-        exit(EXIT_FAILURE);
-    }
-    
-    FILE *correct_file = fopen("correct.txt", "r");
-    if(correct_file == NULL){
         perror("fopen");
         exit(EXIT_FAILURE);
     }
@@ -120,12 +109,12 @@ int main(int argc, char** argv){
     memset(tlb.tlb_frame, -1, sizeof(tlb.tlb_frame));
     tlb.idx = 0;
     
-    while((fscanf(addr_file, "%d", &logi_addr) == 1) && (fscanf(correct_file, "%*s %*s %*d %*s %*s %d %*s %d", &real_phys_addr, &real_val) == 2)){
-        find_page(logi_addr, page_table, &tlb, (char*)memory, &open_frame, &page_fault, &tlb_hit_sum, real_phys_addr, real_val);
+    while((fscanf(addr_file, "%d", &logi_addr) == 1)){
+        find_page(logi_addr, page_table, &tlb, (char*)memory, &open_frame, &page_fault, &tlb_hit_sum);
         cnt++;
     }
 
-    printf("\nPage Fault Rate: %.4f\n", (float)page_fault / (float)cnt);
+    printf("Page Fault Rate: %.4f\n", (float)page_fault / (float)cnt);
     printf("TLB hit rate:    %.4f\n", (float)tlb_hit_sum / (float)cnt);
     fclose(addr_file);
 
