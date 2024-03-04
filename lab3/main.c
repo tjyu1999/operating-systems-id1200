@@ -1,9 +1,9 @@
 # include <stdio.h>
 # include <stdlib.h>
 
-# define PAGE_TABLE_SIZE 256
 # define TLB_SIZE         16
-# define BUFFER_SIZE     256
+# define PAGE_TABLE_SIZE 256
+# define FRAME_SIZE      256
 # define MEM_SIZE        256
 
 struct TLB{
@@ -13,8 +13,12 @@ struct TLB{
 
 FILE* back_file;
 struct TLB tlb[TLB_SIZE];
-unsigned char page_table[PAGE_TABLE_SIZE];
 int idx;
+unsigned char page_table[PAGE_TABLE_SIZE];
+signed char* memory;
+int free_frame = 0;
+int fault = 0;
+int hit = 0;
 
 int get_offset(int value){
     return value & 0xff;
@@ -24,25 +28,23 @@ int get_page(int value){
     return (value >> 8) & 0xff;
 }
 
-signed char get value(int phys_addr){
+signed char get_value(int phys_addr){
     return *(memory + phys_addr);
 }
 
 void allocate(unsigned char page){
-    char buffer[BUFFER_SIZE];
-    memset(buffer, 0, sizeof(buffer));
-
-    if(fseek(back_file, page_num * MEM_SIZE, SEEK_SET) != 0){
+    if(fseek(back_file, page << 8, SEEK_SET) != 0){
         perror("fseek");
         exit(EXIT_FAILURE);
     }
     
-    if(fread(buffer, sizeof(char), MEM_SIZE, back_file) == 0){
+    if(fread(memory + free_frame, sizeof(char), FRAME_SIZE, back_file) == 0){
         perror("fread");
         exit(EXIT_FAILURE);
     }
     
-    
+    page_table[page] = (free_frame >> 8) | 0x100;
+    free_frame += FRAME_SIZE;
 }
 
 int get_phys_addr(int logi_addr){
@@ -63,18 +65,19 @@ int get_phys_addr(int logi_addr){
     
     tlb[idx].key = page;
     tlb[idx].val = page_table[page] & 0xff;
-    if(idx < TLB_SIZE) idx++;
+    idx = (idx + 1) % TLB_SIZE;
     
-    return ((ptable[pnum] & 0xff) << 8) | offset;
+    return ((page_table[page] & 0xff) << 8) | offset;
 }
 
 int main(int argc, char** argv){
     if(argc < 2) exit(EXIT_FAILURE);
     
+    memory = malloc(MEM_SIZE * FRAME_SIZE);
+    
     int logi_addr;
     int phys_addr;
-    int fault = 0;
-    int hit = 0;
+    int cnt = 0;
     
     FILE* addr_file = fopen(argv[1], "r");
     if(addr_file == NULL){
@@ -92,6 +95,7 @@ int main(int argc, char** argv){
         printf("Virtual adress: %d\t", logi_addr);
         phys_addr = get_phys_addr(logi_addr);
         printf("Physical address: %d\t Value: %d\t\n", phys_addr, get_value(phys_addr));
+        cnt++;
     }
     
     printf("Page fault rate: %.4f\n", (float)(fault / cnt));
