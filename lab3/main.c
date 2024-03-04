@@ -13,8 +13,8 @@ struct TLB{
 
 FILE* back_file;
 struct TLB tlb[TLB_SIZE];
-int idx;
-unsigned char page_table[PAGE_TABLE_SIZE];
+int idx = 0;
+int page_table[PAGE_TABLE_SIZE];
 signed char* memory;
 int free_frame = 0;
 int fault = 0;
@@ -51,7 +51,7 @@ int get_phys_addr(int logi_addr){
     int page = get_page(logi_addr);
     int offset = get_offset(logi_addr);
     
-    for(int i = 0; i < TLB_SIZE; i++){
+    for(int i = 0; i < idx; i++){
         if(tlb[i].key == page){
             hit++;
             return (tlb[i].val << 8) | offset;
@@ -75,8 +75,8 @@ int main(int argc, char** argv){
     
     memory = malloc(MEM_SIZE * FRAME_SIZE);
     
-    int logi_addr;
-    int phys_addr;
+    unsigned short logi_addr;
+    unsigned short phys_addr;
     int cnt = 0;
     
     FILE* addr_file = fopen(argv[1], "r");
@@ -91,17 +91,16 @@ int main(int argc, char** argv){
         exit(EXIT_FAILURE);
     }
     
-    while((fscanf(addr_file, "%d", &logi_addr) == 1)){
-        printf("Virtual adress: %d\t", logi_addr);
+    while((fscanf(addr_file, "%hd", &logi_addr) == 1)){
         phys_addr = get_phys_addr(logi_addr);
-        printf("Physical address: %d\t Value: %d\t\n", phys_addr, get_value(phys_addr));
+        printf("Virtual adress: %d\t Physical address: %d\t Value: %d\t\n", logi_addr, phys_addr, get_value(phys_addr));
         cnt++;
     }
     
-    printf("Page fault rate: %.4f\n", (float)(fault / cnt));
-    printf("TLB hit rate:    %.4f\n", (float)(hit / cnt));
+    printf("Page fault rate: %.4f\n", (float)fault / (float)cnt);
+    printf("TLB hit rate:    %.4f\n", (float)hit / (float)cnt);
     fclose(addr_file);
-    fclose(addr_file);
+    fclose(back_file);
     
     return 0;
 }
