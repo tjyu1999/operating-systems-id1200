@@ -75,8 +75,9 @@ int main(int argc, char** argv){
     
     memory = malloc(MEM_SIZE * FRAME_SIZE);
     
-    unsigned short logi_addr;
-    unsigned short phys_addr;
+    int logi_addr;
+    int phys_addr;
+    int value;
     int cnt = 0;
     
     FILE* addr_file = fopen(argv[1], "r");
@@ -91,12 +92,14 @@ int main(int argc, char** argv){
         exit(EXIT_FAILURE);
     }
     
-    while((fscanf(addr_file, "%hd", &logi_addr) == 1)){
+    while((fscanf(addr_file, "%d", &logi_addr) == 1)){
         phys_addr = get_phys_addr(logi_addr);
-        printf("Virtual adress: %d\t Physical address: %d\t Value: %d\t\n", logi_addr, phys_addr, get_value(phys_addr));
+        value = get_value(phys_addr);
+        printf("Virtual adress: %8d\t Physical address: %8d\t Value: %4d\n", logi_addr, phys_addr, value);
         cnt++;
     }
     
+    printf("\n");
     printf("Page fault rate: %.4f\n", (float)fault / (float)cnt);
     printf("TLB hit rate:    %.4f\n", (float)hit / (float)cnt);
     fclose(addr_file);
