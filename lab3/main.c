@@ -94,7 +94,7 @@ int main(int argc, char** argv){
     
     while((fscanf(addr_file, "%d", &logi_addr) == 1)){
         phys_addr = get_phys_addr(logi_addr);
-        value = get_value(phys_addr);
+        value = get_value(phys_addr);        
         printf("Virtual adress: %8d\t Physical address: %8d\t Value: %4d\n", logi_addr, phys_addr, value);
         cnt++;
     }
