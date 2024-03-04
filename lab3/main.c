@@ -1,7 +1,5 @@
 # include <stdio.h>
 # include <stdlib.h>
-# include <string.h>
-# include <stdbool.h>
 
 # define PAGE_TABLE_SIZE 256
 # define TLB_SIZE         16
@@ -9,18 +7,28 @@
 # define MEM_SIZE        256
 
 struct TLB{
-    unsigned char tlb_page[TLB_SIZE];
-    unsigned char tlb_frame[TLB_SIZE];
-    int idx;
+    int key;
+    int val;
 };
 
-int read_from_disk(int page_num, char* memory, int* open_frame){
-    FILE *back_file = fopen("BACKING_STORE.bin", "rb");
-    if(back_file == NULL){
-        perror("fopen");
-        exit(EXIT_FAILURE);
-    }
-    
+FILE* back_file;
+struct TLB tlb[TLB_SIZE];
+unsigned char page_table[PAGE_TABLE_SIZE];
+int idx;
+
+int get_offset(int value){
+    return value & 0xff;
+}
+
+int get_page(int value){
+    return (value >> 8) & 0xff;
+}
+
+signed char get value(int phys_addr){
+    return *(memory + phys_addr);
+}
+
+void allocate(unsigned char page){
     char buffer[BUFFER_SIZE];
     memset(buffer, 0, sizeof(buffer));
 
@@ -33,68 +41,40 @@ int read_from_disk(int page_num, char* memory, int* open_frame){
         perror("fread");
         exit(EXIT_FAILURE);
     }
-
-    for(int i = 0; i < MEM_SIZE; i++) *((memory + (*open_frame) * MEM_SIZE) + i) = buffer[i];
-    (*open_frame)++;
-
-    return (*open_frame) - 1;
+    
+    
 }
 
-int find_page(int logi_addr, char* page_table, struct TLB* tlb,  char* memory, int* open_frame, int* page_fault, int* tlb_hit_sum){
-    unsigned char page_num;
-    unsigned char offset;
-    unsigned char mask = 0xFF;    
-    int val;
-    int frame = 0;
-    int new_frame = 0;
-    bool tlb_hit = false;
-
-    printf("Virtual adress: %d\t", logi_addr);
-
-    page_num = (logi_addr >> 8) & mask;
-    offset = logi_addr & mask;
+int get_phys_addr(int logi_addr){
+    int page = get_page(logi_addr);
+    int offset = get_offset(logi_addr);
     
-    for(int j = 0; j < TLB_SIZE; j++){
-        if(tlb->tlb_page[j] == page_num){
-            frame = tlb->tlb_frame[j];
-            tlb_hit = true;
-            (*tlb_hit_sum)++;
-        }		
-    }
-    
-    if(tlb_hit == false){
-        if(page_table[page_num] == -1){
-            new_frame = read_from_disk(page_num, memory, open_frame);
-            page_table[page_num] = new_frame;
-            (*page_fault)++;
+    for(int i = 0; i < TLB_SIZE; i++){
+        if(tlb[i].key == page){
+            hit++;
+            return (tlb[i].val << 8) | offset;
         }
-        
-        frame = page_table[page_num];
-        tlb->tlb_page[tlb->idx] = page_num;
-        tlb->tlb_frame[tlb->idx] = page_table[page_num];
-        tlb->idx = (tlb->idx + 1) % TLB_SIZE;	
     }
     
-    int phys_addr = ((unsigned char)frame * MEM_SIZE) + offset;
-    val = *(memory + phys_addr);
-    printf("Physical address: %d\t Value: %d\t\n", phys_addr, val);
-
-    return 0;
+    if(!(page_table[page] & 0x100)){
+        allocate(page);
+        fault++;
+    }
+    
+    tlb[idx].key = page;
+    tlb[idx].val = page_table[page] & 0xff;
+    if(idx < TLB_SIZE) idx++;
+    
+    return ((ptable[pnum] & 0xff) << 8) | offset;
 }
 
 int main(int argc, char** argv){
     if(argc < 2) exit(EXIT_FAILURE);
-
+    
     int logi_addr;
     int phys_addr;
-    int val;
-    int open_frame = 0;
-    int page_fault = 0;
-    int tlb_hit_sum = 0;
-    int cnt = 0;
-    
-    unsigned char page_table[PAGE_TABLE_SIZE];
-    char memory[MEM_SIZE][MEM_SIZE];
+    int fault = 0;
+    int hit = 0;
     
     FILE* addr_file = fopen(argv[1], "r");
     if(addr_file == NULL){
@@ -102,21 +82,22 @@ int main(int argc, char** argv){
         exit(EXIT_FAILURE);
     }
     
-    memset(page_table, -1, sizeof(page_table));	
-
-    struct TLB tlb;	
-    memset(tlb.tlb_page, -1, sizeof(tlb.tlb_page));
-    memset(tlb.tlb_frame, -1, sizeof(tlb.tlb_frame));
-    tlb.idx = 0;
+    back_file = fopen("BACKING_STORE.bin", "rb");
+    if(back_file == NULL){
+        perror("fopen");
+        exit(EXIT_FAILURE);
+    }
     
     while((fscanf(addr_file, "%d", &logi_addr) == 1)){
-        find_page(logi_addr, page_table, &tlb, (char*)memory, &open_frame, &page_fault, &tlb_hit_sum);
-        cnt++;
+        printf("Virtual adress: %d\t", logi_addr);
+        phys_addr = get_phys_addr(logi_addr);
+        printf("Physical address: %d\t Value: %d\t\n", phys_addr, get_value(phys_addr));
     }
-
-    printf("Page Fault Rate: %.4f\n", (float)page_fault / (float)cnt);
-    printf("TLB hit rate:    %.4f\n", (float)tlb_hit_sum / (float)cnt);
+    
+    printf("Page fault rate: %.4f\n", (float)(fault / cnt));
+    printf("TLB hit rate:    %.4f\n", (float)(hit / cnt));
     fclose(addr_file);
-
+    fclose(addr_file);
+    
     return 0;
 }
