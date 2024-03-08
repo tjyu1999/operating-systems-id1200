@@ -6,7 +6,7 @@
 # define CYLINDERS 5000
 # define REQUESTS  1000
 
-int fcfs(int* req, int head){
+int fcfs(int *req, int head){
     int move = 0;
     int curr = head;
     for(int i = 0; i < REQUESTS; i++){
@@ -17,7 +17,7 @@ int fcfs(int* req, int head){
     return move;
 }
 
-int sstf(int* req, int head){
+int sstf(int *req, int head){
     int move = 0;
     int visited[REQUESTS] = {0};
     
@@ -46,7 +46,7 @@ int sstf(int* req, int head){
     return move;
 }
 
-int scan(int* req, int head){
+int scan(int *req, int head){
     int move = 0;
     int* sorted_req = malloc(REQUESTS * sizeof(int));
     memcpy(sorted_req, req, REQUESTS * sizeof(int));
@@ -89,7 +89,7 @@ int scan(int* req, int head){
     return move;
 }
 
-int cscan(int* req, int head){
+int cscan(int *req, int head){
     int move = 0;
     int* sorted_req = malloc(REQUESTS * sizeof(int));
     memcpy(sorted_req, req, REQUESTS * sizeof(int));
@@ -130,9 +130,9 @@ int cscan(int* req, int head){
     return move;
 }
 
-int look(int* req, int head){
+int look(int *req, int head){
     int move = 0;
-    int* sorted_req = malloc(REQUESTS * sizeof(int));
+    int *sorted_req = malloc(REQUESTS * sizeof(int));
     memcpy(sorted_req, req, REQUESTS * sizeof(int));
     
     for(int i = 0; i < REQUESTS; i++){
@@ -172,7 +172,7 @@ int look(int* req, int head){
     return move;
 }
 
-int clook(int* req, int head){
+int clook(int *req, int head){
     int move = 0;
     int* sorted_req = malloc(REQUESTS * sizeof(int));
     memcpy(sorted_req, req, REQUESTS * sizeof(int));
@@ -212,7 +212,7 @@ int clook(int* req, int head){
     return move;
 }
 
-int main(int argc, char** argv){
+int main(int argc, char **argv){
     if(argc < 2) exit(EXIT_FAILURE);
     if(atoi(argv[1]) > 4999) exit(EXIT_FAILURE);
     
