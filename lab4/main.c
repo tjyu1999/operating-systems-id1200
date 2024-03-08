@@ -48,7 +48,7 @@ int sstf(int *req, int head){
 
 int scan(int *req, int head){
     int move = 0;
-    int* sorted_req = malloc(REQUESTS * sizeof(int));
+    int *sorted_req = malloc(REQUESTS * sizeof(int));
     memcpy(sorted_req, req, REQUESTS * sizeof(int));
     
     for(int i = 0; i < REQUESTS; i++){
@@ -91,7 +91,7 @@ int scan(int *req, int head){
 
 int cscan(int *req, int head){
     int move = 0;
-    int* sorted_req = malloc(REQUESTS * sizeof(int));
+    int *sorted_req = malloc(REQUESTS * sizeof(int));
     memcpy(sorted_req, req, REQUESTS * sizeof(int));
     
     for(int i = 0; i < REQUESTS; i++){
@@ -174,7 +174,7 @@ int look(int *req, int head){
 
 int clook(int *req, int head){
     int move = 0;
-    int* sorted_req = malloc(REQUESTS * sizeof(int));
+    int *sorted_req = malloc(REQUESTS * sizeof(int));
     memcpy(sorted_req, req, REQUESTS * sizeof(int));
     
     for(int i = 0; i < REQUESTS; i++){
