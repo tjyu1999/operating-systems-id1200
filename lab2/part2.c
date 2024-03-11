@@ -8,10 +8,10 @@
 
 # define MAX 5
 
-sem_t* semA;
-sem_t* semB;
+sem_t *semA;
+sem_t *semB;
 
-void* reader_process(int* var){
+void* reader_process(int *var){
     while(1){
         if(*var >= MAX){
             exit(0);
@@ -52,7 +52,7 @@ void* writer_process(int* var){
 
 int main(){
     int shm_id = shmget(IPC_PRIVATE, sizeof(int), IPC_CREAT | 0666);
-    int* var = shmat(shm_id, NULL, 0);
+    int *var = shmat(shm_id, NULL, 0);
     *var = 0;
     
     semA = sem_open("/semA", O_CREAT | O_RDWR, 0600, 1);
