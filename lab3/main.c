@@ -15,7 +15,7 @@ FILE* back_file;
 struct TLB tlb[TLB_SIZE];
 int idx = 0;
 int page_table[PAGE_TABLE_SIZE];
-signed char* memory;
+signed char *memory;
 int free_frame = 0;
 int fault = 0;
 int hit = 0;
@@ -70,7 +70,7 @@ int get_phys_addr(int logi_addr){
     return ((page_table[page] & 0xff) << 8) | offset;
 }
 
-int main(int argc, char** argv){
+int main(int argc, char **argv){
     if(argc < 2) exit(EXIT_FAILURE);
     
     memory = malloc(MEM_SIZE * FRAME_SIZE);
